@@ -104,7 +104,7 @@ if [[ $dkms_action == 'install' ]]; then
 	[[ -e "$snd_hda_ko_path" ]] && sudo rm -f "$snd_hda_ko_path" && echo "removed $snd_hda_ko_path"
 
 	# run dkms install script
-	sudo bash dkms.sh
+	bash dkms.sh
 
 	# note that Ubuntu, Debian, Fedora and others (see dkms man page) install to updates/dkms
 	# and ignore DEST_MODULE_LOCATION
@@ -119,7 +119,7 @@ elif [[ $dkms_action == 'remove' ]]; then
 
 	# we MUST call dkms remove to ensure any archived base kernel module is restored
 	# and it also removes the whole dkms module subtree
-	sudo bash dkms.sh -r
+	bash dkms.sh -r
 
 	# none of this is needed now dkms.sh calls dkms remove - including the depmod
 	# next line needed to properly clean up dkms module
