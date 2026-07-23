@@ -186,7 +186,7 @@ else
 	set +e
 
 	# attempt to download linux-x.x.x.tar.xz kernel
-	wget -c https://cdn.kernel.org/pub/linux/kernel/v$major_version.x/linux-$kernel_version.tar.xz -P $build_dir
+	wget -c https://cdn.kernel.org/pub/linux/kernel/v$major_version.x/linux-$kernel_version.tar.xz -P /tmp
 
 	if [[ $? -ne 0 ]]; then
 		echo "Failed to download linux-$kernel_version.tar.xz"
@@ -203,7 +203,7 @@ else
 
 	set -e
 
-	tar --strip-components=2 -xvf $build_dir/linux-$kernel_version.tar.xz --directory=build/ linux-$kernel_version/sound/hda
+	tar --strip-components=2 -xvf /tmp/linux-$kernel_version.tar.xz --directory=build/ linux-$kernel_version/sound/hda
 
 fi
 
