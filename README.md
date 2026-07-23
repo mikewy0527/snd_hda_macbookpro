@@ -1,5 +1,3 @@
-WARNING: This repo is not work on iMac27 5k (at least on my iMac27-5k-2019) where kernel version before 6.17, please use [snd-hda-codec-cs8409](https://github.com/mikewy0527/snd-hda-codec-cs8409) instead.
-
 # snd_hda_macbookpro
 
 This is a kernel driver for sound on Macs with Cirrus 8409 HDA chips.
