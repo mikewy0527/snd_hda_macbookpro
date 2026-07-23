@@ -193,8 +193,10 @@ if [ $isubuntu -ge 1 ]; then
 		echo "Ubuntu linux kernel source not found in /usr/src: $tmp_kernel_src"
 		echo "assuming the linux kernel source package is not installed"
 		echo "please install the linux kernel source package:"
-		echo "sudo apt install dpkg-dev"
-		echo "sudo apt source linux"
+		echo "sudo apt install linux-source-$kernel_version"
+		echo "if failed to install because some distros don't use LTS Kernel, download the linux-source-$kernel_version .deb file"
+		echo "using Archive Manager, Open data.tar.zst, extract $tmp_kernel_src"
+		echo "(normally just need to extract data.tar.zst, then copy usr/src to /usr/)"
 		echo "NOTE - This does not work for HWE kernels"
 
 		exit 1
@@ -203,6 +205,22 @@ if [ $isubuntu -ge 1 ]; then
 
 	tar --strip-components=3 -xvf "$tmp_kernel_src" --directory=build/ linux-source-$kernel_version/sound/pci/hda
 
+elif [ $isdebian -ge 1 ]; then
+
+	# NOTE for Debian we need to use the distribution kernel sources as they seem
+	# to be significantly modified from the mainline kernel sources generally with backports from later kernels
+
+	tmp_kernel_src="/usr/src/linux-source-$major_version.$minor_version.tar.xz"
+	if [ ! -e "$tmp_kernel_src" ]; then
+
+		echo "Debian linux kernel source not found in /usr/src: $tmp_kernel_src"
+		echo "assuming the linux kernel source package is not installed"
+		echo "please install the linux kernel source package:"
+		echo "sudo apt install linux-source-$major_version.$minor_version"
+		exit 1
+	fi
+
+	tar --strip-components=3 -xvf "$tmp_kernel_src" --directory=build/ linux-source-$major_version.$minor_version/sound/pci/hda
 else
 	# here we assume the distribution kernel source is essentially the mainline kernel source
 

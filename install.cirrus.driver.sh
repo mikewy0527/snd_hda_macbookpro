@@ -177,8 +177,10 @@ if [ $isubuntu -ge 1 ]; then
 		echo "Ubuntu linux kernel source not found in /usr/src: $tmp_kernel_src"
 		echo "assuming the linux kernel source package is not installed"
 		echo "please install the linux kernel source package:"
-		echo "sudo apt install dpkg-dev"
-		echo "sudo apt source linux"
+		echo "sudo apt install linux-source-$kernel_version"
+		echo "if failed to install because some distros don't use LTS Kernel, download the linux-source-$kernel_version .deb file"
+		echo "using Archive Manager, Open data.tar.zst, extract $tmp_kernel_src"
+		echo "(normally just need to extract data.tar.zst, then copy usr/src to /usr/)"
 		echo "NOTE - This does not work for HWE kernels"
 
 		exit 1
