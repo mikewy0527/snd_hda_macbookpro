@@ -103,7 +103,7 @@ if [[ $dkms_action == 'install' ]]; then
 	# we can only have one dkms module with same file name prefix under the whole /lib/modules/{kernel version} directory
 	update_dir="/lib/modules/${UNAME}/updates/codecs/cirrus"
 	snd_hda_ko_path="$update_dir/$snd_hda_ko_name"
-	[[ -e "$snd_hda_ko_path" ]] && sudo rm -f "$snd_hda_ko_path" && echo "removed $snd_hda_ko_path"
+	[[ -e "$snd_hda_ko_path" ]] && rm -f "$snd_hda_ko_path" && echo "removed $snd_hda_ko_path"
 
 	# run dkms install script
 	bash dkms.sh
@@ -129,7 +129,7 @@ elif [[ $dkms_action == 'remove' ]]; then
 	# (it may be immaterial as the original module wont be loaded in any case as the hardware wont match on Apple machine)
 	#update_dir="/lib/modules/${UNAME}/updates/dkms"
 	#snd_hda_ko_path="$update_dir/$snd_hda_ko_name"
-	#[[ -e "$snd_hda_ko_path" ]] && sudo rm "$snd_hda_ko_path" && sudo depmod -a && echo "removed $snd_hda_ko_path"
+	#[[ -e "$snd_hda_ko_path" ]] && rm "$snd_hda_ko_path" && depmod -a && echo "removed $snd_hda_ko_path"
 	exit
 
 fi
@@ -148,7 +148,7 @@ update_dir="/lib/modules/${UNAME}/updates"
 # fedora doesnt seem to install patch by default so need to explicitly install it
 if [ $isfedora -ge 1 ]; then
 	echo "Ensure the patch package is installed"
-	[[ ! $(command -v patch) ]] && sudo dnf install -y patch
+	[[ ! $(command -v patch) ]] && dnf install -y patch
 fi
 
 isubuntu=0
@@ -179,7 +179,7 @@ if [ $isubuntu -ge 1 ]; then
 		echo "Ubuntu linux kernel source not found in /usr/src: $tmp_kernel_src"
 		echo "assuming the linux kernel source package is not installed"
 		echo "please install the linux kernel source package:"
-		echo "sudo apt install linux-source-$kernel_version"
+		echo "apt install linux-source-$kernel_version"
 		echo "if failed to install because some distros don't use LTS Kernel, download the linux-source-$kernel_version .deb file"
 		echo "using Archive Manager, Open data.tar.zst, extract $tmp_kernel_src"
 		echo "(normally just need to extract data.tar.zst, then copy usr/src to /usr/)"
@@ -310,18 +310,18 @@ fi
 
 popd > /dev/null
 
-[[ ! $dkms_action == 'install' ]] && [[ ! -d $update_dir ]] && sudo mkdir $update_dir
+[[ ! $dkms_action == 'install' ]] && [[ ! -d $update_dir ]] && mkdir $update_dir
 
 # Skipping patch installation since dkms will do it
 if [[ ! $dkms = true ]]; then
 
 	if [ $PATCH_CIRRUS = true ]; then
 		make PATCH_CIRRUS=1
-		sudo make install PATCH_CIRRUS=1
+		make install PATCH_CIRRUS=1
 
 	else
 		make KERNELRELEASE=$UNAME
-		sudo make install KERNELRELEASE=$UNAME
+		make install KERNELRELEASE=$UNAME
 
 	fi
 	echo -e "\ncontents of $update_dir/codecs/cirrus"
