@@ -191,6 +191,23 @@ if [ $isubuntu -ge 1 ]; then
 
 	tar --strip-components=2 -xvf "$tmp_kernel_src" --directory=build/ linux-source-$kernel_version/sound/hda
 
+elif [ $isdebian -ge 1 ]; then
+
+	# NOTE for Debian we need to use the distribution kernel sources as they seem
+	# to be significantly modified from the mainline kernel sources generally with backports from later kernels
+
+	tmp_kernel_src="/usr/src/linux-source-$major_version.$minor_version.tar.xz"
+	if [ ! -e "$tmp_kernel_src" ]; then
+
+		echo "Debian linux kernel source not found in /usr/src: $tmp_kernel_src"
+		echo "assuming the linux kernel source package is not installed"
+		echo "please install the linux kernel source package:"
+		echo "sudo apt install linux-source-$major_version.$minor_version"
+		exit 1
+	fi
+
+	tar --strip-components=2 -xvf "$tmp_kernel_src" --directory=build/ linux-source-$major_version.$minor_version/sound/hda
+
 else
 	# here we assume the distribution kernel source is essentially the mainline kernel source
 
