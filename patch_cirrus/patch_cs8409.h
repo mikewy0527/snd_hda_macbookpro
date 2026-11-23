@@ -235,9 +235,11 @@ enum cs8409_coefficient_index_registers {
 #define CS42L42_I2C_SLEEP_US			(2000)
 #define CS42L42_PDN_TIMEOUT_US			(250000)
 #define CS42L42_PDN_SLEEP_US			(2000)
+#define CS42L42_INIT_TIMEOUT_MS			(45)
+#define CS42L42_ANA_MUTE_AB			(0x0C)
 #define CS42L42_FULL_SCALE_VOL_MASK		(2)
-#define CS42L42_FULL_SCALE_VOL_0DB		(1)
-#define CS42L42_FULL_SCALE_VOL_MINUS6DB		(0)
+#define CS42L42_FULL_SCALE_VOL_0DB		(0)
+#define CS42L42_FULL_SCALE_VOL_MINUS6DB		(1)
 
 /* Dell BULLSEYE / WARLOCK / CYBORG Specific Definitions */
 
@@ -245,6 +247,7 @@ enum cs8409_coefficient_index_registers {
 #define CS8409_CS42L42_RESET			GENMASK(5, 5) /* CS8409_GPIO5 */
 #define CS8409_CS42L42_INT			GENMASK(4, 4) /* CS8409_GPIO4 */
 #define CS8409_CYBORG_SPEAKER_PDN		GENMASK(2, 2) /* CS8409_GPIO2 */
+#define CS8409_WARLOCK_SPEAKER_PDN		GENMASK(1, 1) /* CS8409_GPIO1 */
 #define CS8409_CS42L42_HP_PIN_NID		CS8409_PIN_ASP1_TRANSMITTER_A
 #define CS8409_CS42L42_SPK_PIN_NID		CS8409_PIN_ASP2_TRANSMITTER_A
 #define CS8409_CS42L42_AMIC_PIN_NID		CS8409_PIN_ASP1_RECEIVER_A
@@ -304,11 +307,11 @@ struct cs8409_cir_param {
 
 
 #ifdef APPLE_CODECS
-struct unsol_item {
-	struct list_head list;
-	unsigned int idx;
-	unsigned int res;
-};
+//struct unsol_item {
+//	struct list_head list;
+//	unsigned int idx;
+//	unsigned int res;
+//};
 struct hda_cvt_setup_apple {
 	hda_nid_t nid;
 	u8 stream_tag;
@@ -381,20 +384,38 @@ struct cs8409_spec {
 	int (*spdif_sw_put)(struct snd_kcontrol *kcontrol,
 			    struct snd_ctl_elem_value *ucontrol);
 
-	// so it appears we have "concurrency" in the linux HDA code
-	// in that if unsolicited responses occur which perform extensive verbs
-	// the hda verbs are intermixed with eg extensive start playback verbs
-	// on OSX we appear to have blocks of verbs during which unsolicited responses
-	// are logged but the unsolicited verbs occur after the verb block
-	// this flag is used to flag such verb blocks and the list will store the
-	// responses
-	// we use a pre-allocated list - if we have more than 10 outstanding unsols
-	// we will drop
-	// not clear if mutexes would be the way to go
-	int block_unsol;
-	struct list_head unsol_list;
-	struct unsol_item unsol_items_prealloc[10];
-	int unsol_items_prealloc_used[10];
+	//// so it appears we have "concurrency" in the linux HDA code
+	//// in that if unsolicited responses occur which perform extensive verbs
+	//// the hda verbs are intermixed with eg extensive start playback verbs
+	//// on OSX we appear to have blocks of verbs during which unsolicited responses
+	//// are logged but the unsolicited verbs occur after the verb block
+	//// this flag is used to flag such verb blocks and the list will store the
+	//// responses
+	//// we use a pre-allocated list - if we have more than 10 outstanding unsols
+	//// we will drop
+	//// not clear if mutexes would be the way to go
+	//int block_unsol;
+	//struct list_head unsol_list;
+	//struct unsol_item unsol_items_prealloc[10];
+	//int unsol_items_prealloc_used[10];
+
+	// so it appears unsol responses are queued by the hda system
+	// switching to mutex locks for prevention of parallel operation
+	// I have been unable to find locking used for switching eg when headphones plugged in/out
+	// I guess I dont understand mutex locking and workqueues
+	// unsol responses are queued and run on a workqueue which apparently runs asynchronously to main thread
+	// so far looks like only way to block unsol responses is by having the same mutex lock
+	// in the code we want blocked and the unsol response code
+	// so either code has to wait for other code to finish
+	struct mutex unsol_lock;
+	struct mutex i2ccodeblock_lock;
+
+	// for some reason resume seems to be running after an unsol response starts
+	// - but we need resume to run before most of unsol response
+	// adding variables to detect when suspend/resume run
+	// these will be set in suspend and unset in resume
+	int codec_suspended;
+	int subcodec_suspended;
 
 	// add in specific nids for the intmike and linein as they seem to swap
 	// between macbook pros (14,3) and imacs (18,3)
@@ -502,17 +523,15 @@ int cs42l42_volume_put(struct snd_kcontrol *kctrl, struct snd_ctl_elem_value *uc
 
 extern const struct hda_pcm_stream cs42l42_48k_pcm_analog_playback;
 extern const struct hda_pcm_stream cs42l42_48k_pcm_analog_capture;
-extern const struct snd_pci_quirk cs8409_fixup_tbl[];
+extern const struct hda_quirk cs8409_fixup_tbl[];
 extern const struct hda_model_fixup cs8409_models[];
 extern const struct hda_fixup cs8409_fixups[];
 extern const struct hda_verb cs8409_cs42l42_init_verbs[];
-extern const struct hda_pintbl cs8409_cs42l42_pincfgs[];
 extern const struct cs8409_cir_param cs8409_cs42l42_hw_cfg[];
 extern const struct cs8409_cir_param cs8409_cs42l42_bullseye_atn[];
 extern struct sub_codec cs8409_cs42l42_codec;
 
 extern const struct hda_verb dolphin_init_verbs[];
-extern const struct hda_pintbl dolphin_pincfgs[];
 extern const struct cs8409_cir_param dolphin_hw_cfg[];
 extern struct sub_codec dolphin_cs42l42_0;
 extern struct sub_codec dolphin_cs42l42_1;
